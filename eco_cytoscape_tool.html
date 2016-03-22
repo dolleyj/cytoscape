@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="description" content="[An example of getting started with Cytoscape.js]" />
+  <link href="/home/dolley/practice_cytoscape/practice_cytoscape.css" rel="stylesheet" />
+  <meta charset=utf-8 />
+  <meta name="viewport" content="user-scalable=no, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, minimal-ui">
+  <title>Cytoscape.js initialisation</title>
+  <script src="http://cytoscape.github.io/cytoscape.js/api/cytoscape.js-latest/cytoscape.min.js"></script>
+<!--  <script src="/home/dolley/practice_cytoscape/practice_cytoscape.js"></script>-->
+  
+  <script src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
+
+  <!--MAIN CYTOSCAPE SCRIPT-->
+  <script src="/home/dolley/practice_cytoscape/ecocyvis.js"></script>
+  
+  <!-- For dagre algorithm -->
+  <script src="https://cdn.rawgit.com/cpettitt/dagre/v0.7.4/dist/dagre.min.js"></script>
+  <script src="https://cdn.rawgit.com/cytoscape/cytoscape.js-dagre/1.1.2/cytoscape-dagre.js"></script>
+  
+  <!-- For Cose-Bilkent algorithm -->
+  <script src="https://cdn.rawgit.com/cytoscape/cytoscape.js-cose-bilkent/1.0.2/cytoscape-cose-bilkent.js"></script>
+
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+  
+  <!--TEMPORARY STYLING FOR DEVELOPMENT-->
+	<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+
+</head>
+  
+<body>
+	<h1>Let's test Cytoscape!</h1>
+	<!--<div id="cyy"></div>--><!--'cy' for initial demo setup -->
+<!--	<div id="cy-container"> -->
+	<div id="details">
+		<a id="button-clear" type="button" class="btn btn-default">Remove faded nodes</a>
+		<a id="button-unclear" type="button" class="btn btn-default">Restore faded nodes</a>
+		<a id="button-print" type="button" class="btn btn-default">Save Graph Image</a>
+		<br/>
+		<p>Select a node</p>
+	</div>
+	<div id="cy-container">
+		<div id="cy-eco">
+			<i id="loading" class="fa fa-refresh fa-4 fa-spin"></i>
+		</div>
+	</div>
+	<!--</div>-->
+</body>
+</html>
