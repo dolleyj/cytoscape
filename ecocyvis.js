@@ -136,7 +136,7 @@ $(function() {
 //		}
 	}); //end var cy
 	
-	$.getJSON( "https://raw.githubusercontent.com/dolleyj/flatfile_visualizer/master/eco_from_obo.json", function( data ) {
+	$.getJSON( "https://raw.githubusercontent.com/dolleyj/cytoscape/master/eco_from_obo.json", function( data ) {
 		var newNodes = [];		
 					
 //		var counter = 0; 
