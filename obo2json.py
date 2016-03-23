@@ -16,31 +16,37 @@ from __future__ import print_function, division
 import json
 from collections import defaultdict
 
-fname = "/home/dolley/practice_cytoscape/eco.obo"
+fname = "/home/dolley/practice_cytoscape/eco.obo" #TODO: make dynamic
 term_head = "[Term]"
 
 #Keep the desired object data here
 all_objects = {}
 
 def add_object(d):
-#	#Print all objects in JSON
-##	print(json.dumps(d, indent = 4) + '\n')	
-#	print(json.dumps(d, indent = 4, sort_keys = True) + '\n')
-#	
-#	with open("eco_from_obo.json", "a") as jsonfile:
-#		json.dump(d, jsonfile, sort_keys = True, indent = 4)
-	
-	#Each object overwrites the previous one:
-	#with open('eco_from_obo.json', 'w') as outfile:
-	#	json.dump(d, outfile)
 	
 #	#Ignore obsolete objects
 #	if "is_obsolete" in d:
 #		return
+####################################################################
+# This will grab term id and set all attributes to it
+# This should prevent term attributes from being missed
+	
+	term_key = d['id'][0] # set object key with eco term id
+	
+	# This removes 'id' because its going to be set as object's key
+	# and keeping it would make 'id' appear twice 
+	if "id" in d:
+		del d["id"]
+		
+	# This 'is_a' description info. Remove it to keep descriptive info	
+	if "is_a" in d:
+		d["is_a"] = [s.partition(' ! ')[0] for s in d["is_a"]]
+		
+	all_objects[term_key] = d # set all of object's data that is present to id
+#####################################################################
+#####################################################################
+# This is for picking out specific parts of the terms
 
-################################################
-# All of this is for picking out specific parts of the terms
-#
 	#Gather desired data into a single list,
 	# and store it in the main all_objects dict
 	key = d["id"][0]
@@ -69,6 +75,7 @@ def add_object(d):
 						"created_by": created_by,
 						"creation_date": creation_date						
 	}
+####################################################################	
 
 #A temporary dict to hold object data
 current = defaultdict(list)
