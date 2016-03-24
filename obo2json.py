@@ -38,6 +38,9 @@ def add_object(d):
 	if "id" in d:
 		del d["id"]
 		
+	if "is_a" not in d:
+		d["is_a"] = []
+		
 	# This 'is_a' description info. Remove it to keep descriptive info	
 	if "is_a" in d:
 		d["is_a"] = [s.partition(' ! ')[0] for s in d["is_a"]]
@@ -45,6 +48,7 @@ def add_object(d):
 	all_objects[term_key] = d # set all of object's data that is present to id
 #####################################################################
 #####################################################################
+'''
 # This is for picking out specific parts of the terms
 
 	#Gather desired data into a single list,
@@ -75,6 +79,7 @@ def add_object(d):
 						"created_by": created_by,
 						"creation_date": creation_date						
 	}
+'''
 ####################################################################	
 
 #A temporary dict to hold object data
