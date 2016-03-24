@@ -135,8 +135,13 @@ $(function() {
 //			padding: 10
 //		}
 	}); //end var cy
-	
-	$.getJSON( "https://raw.githubusercontent.com/dolleyj/cytoscape/master/eco_from_obo.json", function( data ) {
+
+//  TODO: NEED to dynamically add term attributes instead of hardcoring them in 
+//  START USING THIS:
+//  TODO: IS_A.LENGTH ERRORS because is_a was previously hardcoded in obo2json.py
+//			NOW 'is_a' may NOT exist (ie Root nodes, maybe non 'ECO:' terms)
+	$.getJSON( "https://raw.githubusercontent.com/dolleyj/cytoscape/master/TEST_eco_from_obo.json", function( data ) {	
+//	$.getJSON( "https://raw.githubusercontent.com/dolleyj/cytoscape/master/eco_from_obo.json", function( data ) {
 		var newNodes = [];		
 					
 //		var counter = 0; 
@@ -165,8 +170,9 @@ $(function() {
 // For creating 'position' for each node. AND to loop thru OBO file once instead of twice
 // http://stackoverflow.com/questions/31829231/
 
-			// For root terms: Evidence & Assertion Method (no parents)
-			if ( val.is_a.length === 0 ) { 			
+			// If 'is_a' is undefined
+			// mainly for root terms: 'Evidence' & 'Assertion Method' (no parents)
+			if ( !val.is_a ) { 			
 				//console.log("is_a UNDEFINED"); //FOR TESTING
 				
 				newNodes.push(
