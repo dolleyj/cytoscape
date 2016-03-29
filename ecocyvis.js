@@ -5,54 +5,44 @@ $(function() {
 	var displayNodeDetails = function(node) {
 	
 		// remove prior term info (if exists)
-		$('p#term-info').remove();
-	
-		// display term information
-		var nodeID = $('<p id="term-info"><strong>ID:</strong>  ' + node.data('id') + '</p>').appendTo('#details');
-		var nodeName = $('<p id="term-info"><strong>Name:</strong>  ' + node.data('name') + '</p>').appendTo('#details');
-		var nodeDef = $('<p id="term-info"><strong>Definition:</strong>  ' + node.data('definition') + '</p>').appendTo('#details');
-		var nodeComment = function(){
-			if ( node.data('comment') ) { 
-				 return $('<p id="term-info"><strong>Comment:</strong>  ' + node.data('comment') + '</p>').appendTo('#details'); 
-			} else {return}
-		}
-		var nodeSyn = function() {
-			if ( node.data('synonym') ) { 				
-				return $('<p id="term-info"><strong>Synoym:</strong>  ' + node.data('synonym') + '</p>').appendTo('#details');
-			} else {return}
-		}
-		var nodeDisjoint = function() {		
-			if ( node.data('disjoint_from') ) {		
-				return $('<p id="term-info"><strong>Disjoint from:</strong>  ' + node.data('disjoint_from') + '</p>').appendTo('#details');
-			} else {return}
-		}
-		var nodeXref = function() {		
-			if ( node.data('xref') ) {		
-				return $('<p id="term-info"><strong>Xref:</strong>  ' + node.data('xref') + '</p>').appendTo('#details');
-			} else {return}
-		}
-		var nodeIsA = function() {		
-			if ( node.data('is_a') ) {				
-				return $('<p id="term-info"><strong>Is a:</strong>  ' + node.data('is_a') + '</p>').appendTo('#details');
-			} else {return}
-		}
-		var nodeIsObs = function() {		
-			if ( node.data('is_obsolete') ) {		
-				return $('<p id="term-info"><strong>is obsolete:</strong>  ' + node.data('is_obsolete') + '</p>').appendTo('#details');
-			} else {return}
-		}
-		var nodeCreatDate = function() {			
-			if ( node.data('creation_date') ) {				
-				return $('<p id="term-info"><strong>Creation Date:</strong>  ' + node.data('creation_date') + '</p>').appendTo('#details');
-			} else {return}
-		}
-		var nodeCreatBy = function() {		
-			if ( node.data('created_by') ) {				
-				return $('<p id="term-info"><strong>Created by:</strong>  ' + node.data('created_by') + '</p>').appendTo('#details');
-			} else {return}
+		$('p#node-info').remove();
+		
+		// make node data more assessible and ORGANIZE IT
+		var nodeData = node.data();
+		
+		console.log(nodeData); //FOR TESTING
+		//console.log("nodeData['created_by'] = " + nodeData['created_by']); // prints correct val for 'created_by'
+
+		// Title case property names
+		function toTitleCase(str) {		//http://stackoverflow.com/a/196991/2900840
+			return str.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
 		}
 		
-		return nodeID + nodeName + nodeDef + nodeComment + nodeSyn + nodeDisjoint + nodeXref + nodeIsA + nodeIsObs + nodeCreatDate + nodeCreatBy;
+		// Display Node's properties to DETAILS AREA
+		for (var property in nodeData ) {  //http://stackoverflow.com/a/16735184/2900840
+			if (nodeData.hasOwnProperty(property)) {
+				console.log("property = " + property);
+				console.log("VAL = " + node.data(property));	
+			
+				if (property == 'id') {
+					$('<p id="node-info"><strong>ID:</strong>  ' + node.data(property) + '</p>').appendTo('#node-id');		
+				} else if (property == 'name') { 
+					$('<p id="node-info"><strong>Name:</strong>  ' + node.data(property) + '</p>').appendTo('#node-name');
+				} else if (property == 'def') {
+					$('<p id="node-info"><strong>Definition:</strong>  ' + node.data(property) + '</p>').appendTo('#node-def');
+				} else if (property == 'created_by') {
+					console.log("cray! cray!");
+					$('<p id="node-info"><strong>Created By:</strong>  ' + node.data(property) + '</p>').appendTo('#node-created_by');					
+				} else if (property == 'creation_date') {
+					$('<p id="node-info"><strong>Creation Date:</strong>  ' + node.data(property) + '</p>').appendTo('#node-creation_date');					
+				} else {
+					var property_key = property.replace(/\_/g, ' ');
+					property_key = toTitleCase(property_key);
+					$('<p id="node-info"><strong>' + property_key + ':</strong>  ' + node.data(property) + '</p>').appendTo('#node-details');
+				}
+				
+			} // end if hasOwnProp
+		} //end for prop in nodeData
 	} // end displayNodeDetails
 
 
@@ -136,81 +126,52 @@ $(function() {
 //		}
 	}); //end var cy
 
-//  TODO: NEED to dynamically add term attributes instead of hardcoring them in 
-//  START USING THIS:
-//  TODO: IS_A.LENGTH ERRORS because is_a was previously hardcoded in obo2json.py
-//			NOW 'is_a' may NOT exist (ie Root nodes, maybe non 'ECO:' terms)
 	$.getJSON( "https://raw.githubusercontent.com/dolleyj/cytoscape/master/TEST_eco_from_obo.json", function( data ) {	
 //	$.getJSON( "https://raw.githubusercontent.com/dolleyj/cytoscape/master/eco_from_obo.json", function( data ) {
 		var newNodes = [];		
-					
-//		var counter = 0; 
-//		var xStartCoor = 0;
-//		var yStartCoor = 0;
-//		var xLeftOrRight = function() {
-//			var randNum = Math.floor((Math.random() * 10) + 1);
-//			if (randNum >= 5) {
-//				return -1;
-//			} else if (randNum < 5) {
-//				return 1;
-//			}
-//		}
-		var ySpaceNode = 10;
+
 		$.each( data, function( key, val ) {
+			var node = [];
 			if (/^ECO/.test(key)) {
-
-
-			//console.log("ECO ID = " + key); //FOR TESTING
-			//console.log(val.name); //FOR TESTING
-			//console.log(val.def); //FOR TESTING
-
-			// val.is_a returns "ECO:0005542ECO:0000352 {is_inferred="true"},ECO:0005553" 
-			//is_inferred causes error when creating edge (below). Need to only get ECO ids for creating edges
-
-// For creating 'position' for each node. AND to loop thru OBO file once instead of twice
-// http://stackoverflow.com/questions/31829231/
-
-			// If 'is_a' is undefined
-			// mainly for root terms: 'Evidence' & 'Assertion Method' (no parents)
-			if ( !val.is_a ) { 			
-				//console.log("is_a UNDEFINED"); //FOR TESTING
+				var properties = [];
 				
+				// loop through term's properties
+				for ( property in val ) {
+					//console.log(property, val[property]); // FOR TESTING
+											
+					var attr = property;
+					var info = [];
+					properties['id'] = [];
+											
+					info = val[property];
+				
+					properties[property] = info;
+					properties['id'] = key;
+				}
+				//console.log("properties = ", properties);	//FOR TESTING
+				//console.log("ECO ID = " + key); //FOR TESTING
+				
+				// create NODES for cy graph
 				newNodes.push(
-		  			{group: "nodes", 
-			  			data: {
-			  				id: key, 
-			  				name: val.name, 
-			  				definition: val.def,
-			  				is_a: undefined,
-			  				notChild: true
-			  				},
-		  				position: {
-		  					x: 0, //xStartCoor+(counter*xLeftOrRight*10), 
-		  					y: 0 //yStartCoor + ySpaceNode}
-	  					} 
-	  				}
+					{group: "nodes",
+						data: properties,
+						position: {
+							x: 0,
+							y: 0
+							}
+					}
 				);
-//				counter++;
-			// For all other terms under root terms
-			} else {
-				// For Terms with more than one 'is_a'
-				if ( val.is_a.length > 1 ) {
 				
+				if (!val.is_a) {
+					console.log("IS_A IS UNDEFINED!!\n");
+				}
+				else {
+					//console.log("IS_A = " + val.is_a);
 					// clean is_a statements then create an edge for each
 					for ( var element = 0; element < val.is_a.length; element++ ) {
-						var clean_is_a = val.is_a[element].replace( /\s\{.*\}/g, "" ); // removed "{is_inferred=true}"
-						//console.log("clean is_a = " + clean_is_a); //FOR TESTING				
+						var clean_is_a = val.is_a[element].replace( /\s\{.*\}/g, "" ); 
+				
 						newNodes.push(
-//				  			{group: "nodes", 
-//				  				data: {
-//				  					id: key, 
-//				  					name: val.name, 
-//				  					definition: val.def,
-//				  					is_a: val.is_a,
-//				  					notChild: false
-//				  					},
-//			  					position: {x:25*counter*xLeftOrRight, y:20*counter+(ySpaceNode*10)}
-//			  				},
 				  			{group: "edges", 
 				  				data: {
 				  					id: key + clean_is_a, 
@@ -219,64 +180,23 @@ $(function() {
 				  					}
 			  					}
 				  		);
-//				  		counter++;
 					 } //end for
-					
-					// create a node that contains the cleaned 
-		 			newNodes.push(
-		 				{group: "nodes", 
-		  				data: {
-		  					id: key, 
-		  					name: val.name, 
-		  					definition: val.def,
-		  					is_a: val.is_a,
-		  					notChild: false
-		  					},
-						position: {
-							x:0, //25*counter*xLeftOrRight, 
-							y:0 //20*counter+(ySpaceNode*10)
-							}
-						}
-					);
-					//console.log(val.is_a, "  IS_A"); //FOR TESTING
-//					counter++;
-				} else {
-					// For Terms with 1 'is_a'
-					var clean_is_a = val.is_a[0].replace( /\s\{.*\}/g, "" ); // removed "{is_inferred=true}"
-					//console.log("clean is_a = " + clean_is_a); //FOR TESTING
-					newNodes.push(
-			  			{group: "nodes", 
-			  			data: {
-			  				id: key, 
-			  				name: val.name, 
-			  				definition: val.def,
-			  				notChild: false
-			  				},
-			  				position: {
-			  					x:0, //25*counter, 
-			  					y:0 //20*counter+(ySpaceNode*10)
-			  					}
-		  				},
-			  			{group: "edges", 
-			  				data: {
-			  					id: key + clean_is_a, 
-			  					source: key, 
-			  					target: clean_is_a
-			  					}
-	  					}
-			  		);
-//			  		counter++;		
-				} //end if more than 1 'is_a'
-			} //end if 'is_a' exists	
-			}else {return;} // skip terms that are NOT ECO terms
-		}); //end $.each
-		
-		//console.log(newNodes); //FOR TESTING
-		// TODO need to loop thru newNodes to set x-y positions
-		// 1) Root terms: Assertion Method & Evidence SHOULD be at/near top DONE
-		//		They are the parents-of-all-parents
-		// 2) All childs of same rank SHOULD be on at same y-position DONE
-		// 3) 
+				} //end else
+				//console.log( "NEWNODES = ", newNodes );
+				
+				// TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
+				//
+				// 1) Create 'DOTTED LINE' that connects a NODE ---> NODE using 'RELATIONSHIP' - 'used_in' 
+				// 		a) This will create a new EDGE
+				//
+				// 2) Create a new CSS for the DOTTED line EDGE
+				//
+				//
+				// TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
+				
+			} else {return;} // skip terms that are NOT ECO terms		
+			
+		}); //end $.each 
 		
 		// loop thru newNodes to add CORRECT positions
 		var nodeCounter = 0;
@@ -287,8 +207,6 @@ $(function() {
 				console.log(val.data.id, "is a root");
 				val.position.x = 0 + (nodeCounter*500); // offset node position so root nodes do not overlap
 				val.position.y = -200;
-				val.data.isRoot = true; //assign node as an ontology root
-				//console.log("isRoot ", val.data.isRoot);
 				nodeCounter++;
 			} else {
 				
@@ -300,18 +218,8 @@ $(function() {
 				} else {
 					console.log("ELSE!");
 				}
-////			// Find root nodes
-////			if (val.notChild) {
-////				//console.log(key, " is possible root.");
-////				
-////			} else {
-////				//console.log(key, " not possible root.");
-////			
-////			}
-			}
-		
-		
-		});
+			} // end if-else
+		}); // end .each
 		
 		// add all terms to graph
 		cy.add(newNodes);
@@ -319,11 +227,9 @@ $(function() {
 		//hide all terms EXCEPT root terms
 		cy.filter(function(i, element) {
 			if ( element.isNode() && element.data("id") === "ECO:0000000" || element.data("id") === "ECO:0000217") {
-//				element.show();
 				element.removeClass('hidden').addClass('active');
 				console.log("GOT to cy.filter!");
 			} else {
-//				element.hide();
 				element.addClass('hidden');
 			}
 		});
@@ -331,10 +237,8 @@ $(function() {
 	}).then(function(){
 			$('#loading').hide();
 			
-			
-			
-			
 	}); // end .getJSON
+	
 	
 	// centers the graph in viewport
 	cy.center();
@@ -511,24 +415,72 @@ $(function() {
 	});
 	
 	
-	//// COMMENTED OUT TO WORK ON: TODO GENERATE NODE POSITIONS. x:root+whatever AND animate/show connectedNodes	
-////	cy.on('tap', 'node', function(e){
-////		var node = e.cyTarget; 
-////		var neighborhood = node.neighborhood().add(node);
+	// START ECO TERM SEARCH BAR
+	// TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
+	//
+	// 1) Set node IDs and NAMES as souce for .catcomplete search bar
+	// 2) The selected ID or NAME should cy.resize() the graph to design:
+	//		a) the SELECTED node 
+	//		b) the neighborhood of the selected node
+	//
+	//
+	// TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
+	$.widget( "custom.catcomplete", $.ui.autocomplete, {
+		_create: function() {
+		  this._super();
+		  this.widget().menu( "option", "items", "> :not(.ui-autocomplete-category)" );
+		},
+		_renderMenu: function( ul, items ) {
+		  var that = this,
+			currentCategory = "";
+		  $.each( items, function( index, item ) {
+			var li;
+			if ( item.category != currentCategory ) {
+			  ul.append( "<li class='ui-autocomplete-category'><b><u>" + item.category + "</u></b></li>" );
+			  currentCategory = item.category;
+			}
+			li = that._renderItemData( ul, item );
+			if ( item.category ) {
+			  li.attr( "aria-label", item.category + " : " + item.label );
+			}
+		  });
+		}
+	});
 
-////		cy.elements().addClass('faded');
-////		//cy.elements().hide();
-////		neighborhood.removeClass('faded');
-////		//neighborhood.show();
-////	});
+	// Nav Search Bar JQuery script
+	$(function() {
 
-////	cy.on('tap', function(e){
-////		if( e.cyTarget === cy ){
-////			cy.elements().removeClass('faded');
-////		}
-////	});
+		// change input outline color to match site's theme
+		$('input, textarea').focus(function() {
+			$(this).css('outline-color', '#B1DDAB');
+		});
+
+		console.log(newNodes);
+
+		$("#eco-search").catcomplete({
+			source: newNodes,
+			minLength: 1,
 	
-  	// TO LOOP thru json and add nodes/edges
-  	//http://stackoverflow.com/questions/23454473/add-nodes-and-edges-through-loop-in-cytoscape-arbor-layout
+			// select drop-down item. Then press 'Enter' to go to link
+			select:function(e,ui) {
+				$('#eco-search').keypress(function(e){
+					if (e.which ==13) {
+
+						//http://stackoverflow.com/questions/4597050/how-to-check-if-the-url-contains-a-given-string
+						if(window.location.href.indexOf("post/") > -1) {
+							window.location.href = '../../' + ui.item.the_link;
+						}
+						else if (window.location.href.indexOf("publications/") > -1) {
+							window.location.href = '../../' + ui.item.the_link;
+						}
+						else {
+							window.location.href = '../' + ui.item.the_link;
+						}
+					}
+				});
+			}
+
+		});
+	}); //end FUNCTION search bar JQuery script
 
 }); // end script
