@@ -10,7 +10,7 @@ $(function() {
 		// make node data more assessible and ORGANIZE IT
 		var nodeData = node.data();
 		
-		console.log(nodeData); //FOR TESTING
+		//console.log(nodeData); //FOR TESTING
 		//console.log("nodeData['created_by'] = " + nodeData['created_by']); // prints correct val for 'created_by'
 
 		// Title case property names
@@ -21,8 +21,8 @@ $(function() {
 		// Display Node's properties to DETAILS AREA
 		for (var property in nodeData ) {  //http://stackoverflow.com/a/16735184/2900840
 			if (nodeData.hasOwnProperty(property)) {
-				console.log("property = " + property);
-				console.log("VAL = " + node.data(property));	
+				//console.log("property = " + property);
+				//console.log("VAL = " + node.data(property));	
 			
 				if (property == 'id') {
 					$('<p id="node-info"><strong>ID:</strong>  ' + node.data(property) + '</p>').appendTo('#node-id');		
@@ -68,9 +68,18 @@ $(function() {
 			.selector('edge')
 			  .css({
 			  	'width': 6,
+			  	'line-style': 'solid',
 			  	'line-color': '#ffaaaa',
 				'target-arrow-shape': 'triangle',
 				'target-arrow-color': '#ffaaaa'
+			  })
+			.selector('.UsedInEdge')
+			  .css({
+			  	'width': 4,
+			  	'line-style': 'dashed',
+			  	'line-color': '#c1cac5',
+				'target-arrow-shape': 'triangle',
+				'target-arrow-color': '#c1cac5'
 			  })
 			.selector('.selected')
 			  .css({
@@ -132,6 +141,7 @@ $(function() {
 
 		$.each( data, function( key, val ) {
 			var node = [];
+
 			if (/^ECO/.test(key)) {
 				var properties = [];
 				
@@ -161,7 +171,7 @@ $(function() {
 							}
 					}
 				);
-				
+
 				if (!val.is_a) {
 					console.log("IS_A IS UNDEFINED!!\n");
 				}
@@ -178,21 +188,34 @@ $(function() {
 				  					source: key, 
 				  					target: clean_is_a
 				  					}
-			  					}
+		  					}
 				  		);
 					 } //end for
 				} //end else
-				//console.log( "NEWNODES = ", newNodes );
 				
-				// TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
-				//
-				// 1) Create 'DOTTED LINE' that connects a NODE ---> NODE using 'RELATIONSHIP' - 'used_in' 
-				// 		a) This will create a new EDGE
-				//
-				// 2) Create a new CSS for the DOTTED line EDGE
-				//
-				//
-				// TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
+				// Create EDGES for nodes containing 'USED_IN' relationships
+				if (val.relationship) { 
+					//console.log("RELATIONSHIP = " + val.relationship); //FOR TESTING
+					
+					//http://stackoverflow.com/a/432503/2900840
+					var ecoTermRegex = /\s(ECO:\d+)\s/;
+					var match = ecoTermRegex.exec(val.relationship);				
+					var usedInTarget = match[0].trim();
+					//console.log("usedInTerm = " + usedInTarget);
+					
+					newNodes. push(
+						{group: "edges",
+							data: {
+								id: key + usedInTarget,
+								source: key,
+								target: usedInTarget,
+								used_in: true
+								},
+							classes: 'UsedInEdge'	//applies styling for used_in edges		
+						}
+					);
+				}
+				//console.log( "NEWNODES = ", newNodes );
 				
 			} else {return;} // skip terms that are NOT ECO terms		
 			
@@ -204,7 +227,7 @@ $(function() {
 			
 			// Explicitly calls root terms and set START positions
 			if (val.data.id === "ECO:0000000" | val.data.id === "ECO:0000217"){
-				console.log(val.data.id, "is a root");
+				//console.log(val.data.id, "is a root");
 				val.position.x = 0 + (nodeCounter*500); // offset node position so root nodes do not overlap
 				val.position.y = -200;
 				nodeCounter++;
@@ -214,9 +237,9 @@ $(function() {
 				if (val.data.target === "ECO:0000000" | val.data.target === "ECO:0000217" ) {   /// THIS IS READING 'EDGES'. ERRORS BECAUSE NODES DONT CONTAIN A 'TARGET'
 					//val.position.x = 0 + (xLeftOrRight*nodeCounter*250);						/// NEED TO ADD A 'IS_A' TO THE NODE DATA (ABOVE)
 					//val.position.y = 50;
-					console.log(val.data.id, " CHILD");
+				//	console.log(val.data.id, " CHILD");
 				} else {
-					console.log("ELSE!");
+					//console.log("ELSE!");
 				}
 			} // end if-else
 		}); // end .each
@@ -260,7 +283,7 @@ $(function() {
 		var posY = node.position('y'); //get y-coord of selected node
 		var posX = node.position('x'); //get x-coord of selected node
 		
-		//TODO need to get parent node OUT of neighbor so it doesnt remap
+		// Get parent node OUT of neighbor so it doesnt remap
 		var nodeParent = node.outgoers().target(); //gets the edges and targets coming out from node
 		var neighborhood = node.neighborhood(); // includes parent! need to get children
 		
@@ -268,7 +291,7 @@ $(function() {
 		
 		// root nodes error without this:
 		if (nodeParent) {
-			console.log('nodeParent = ', nodeParent.data('id'));
+			//console.log('nodeParent = ', nodeParent.data('id'));
 			var nodeParentId = nodeParent.data('id');
 			parentCount = nodeParent.length;
 			
@@ -455,10 +478,10 @@ $(function() {
 			$(this).css('outline-color', '#B1DDAB');
 		});
 
-		console.log(newNodes);
+		//console.log(newNodes);
 
 		$("#eco-search").catcomplete({
-			source: newNodes,
+//			source: newNodes,
 			minLength: 1,
 	
 			// select drop-down item. Then press 'Enter' to go to link
