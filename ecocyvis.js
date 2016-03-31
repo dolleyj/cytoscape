@@ -2,6 +2,7 @@ $(function() {
 
 	//$('<i id="loading" class="fa fa-refresh fa-4 fa-spin">').append("#cy-eco");
 
+	// DISPLAY A NODE'S PROPERTIES IN DETAILS AREA
 	var displayNodeDetails = function(node) {
 	
 		// remove prior term info (if exists)
@@ -31,12 +32,11 @@ $(function() {
 				} else if (property == 'def') {
 					$('<p id="node-info"><strong>Definition:</strong>  ' + node.data(property) + '</p>').appendTo('#node-def');
 				} else if (property == 'created_by') {
-					console.log("cray! cray!");
 					$('<p id="node-info"><strong>Created By:</strong>  ' + node.data(property) + '</p>').appendTo('#node-created_by');					
 				} else if (property == 'creation_date') {
 					$('<p id="node-info"><strong>Creation Date:</strong>  ' + node.data(property) + '</p>').appendTo('#node-creation_date');					
 				} else {
-					var property_key = property.replace(/\_/g, ' ');
+					var property_key = property.replace(/\_/g, ' '); 
 					property_key = toTitleCase(property_key);
 					$('<p id="node-info"><strong>' + property_key + ':</strong>  ' + node.data(property) + '</p>').appendTo('#node-details');
 				}
@@ -44,6 +44,94 @@ $(function() {
 			} // end if hasOwnProp
 		} //end for prop in nodeData
 	} // end displayNodeDetails
+	
+	// PLOT A NODE AND ITS NEIGHBORHOOD
+	var plotNodeWithNeighbors = function(node, fromSearch) {		
+		var xDistance = 75; // space between nodes (x-coors)
+		
+		var posY = node.position('y'); //get y-coord of selected node
+		var posX = node.position('x'); //get x-coord of selected node
+		
+		// Get parent node OUT of neighbor so it doesnt remap
+		var nodeParent = node.outgoers().target(); //gets the edges and targets coming out from node
+		var neighborhood = node.neighborhood(); // includes parent! need to get children
+		
+		var parentCount = 0;
+		
+		// root nodes error without this:
+		if (nodeParent) {
+			console.log('nodeParent = ', nodeParent.data('id')); // FOR TESTING
+			var nodeParentId = nodeParent.data('id');
+			parentCount = nodeParent.length;
+			
+			nodeParent.removeClass('faded').addClass('active'); // MIGHT BE ABLE TO REMOVE THIS...SHOULD NOT BE HERE. PLOTTING ONLY
+//			neighborhood.filter(function(i, node) {
+//				if ( node.data('id') === nodeParent.data('id') || node.data('target') === nodeParent.data('id')) {
+//					console.log('node.data(id) = ', node.data('id'));
+//					//return node.data('id') != nodeParent.data('id');
+//					return node;
+//				} else {
+//					return node;
+//				}
+//			});			
+			
+		}// else {return true;}
+		
+		
+		var childCount = neighborhood.filter('node').length - parentCount; // number of child nodes
+		console.log(childCount / 2);
+		
+		var xStartPoint = posX - (xDistance * childCount); //from the selected node x-coord, start at half of the total distance between all child nodes 
+		
+		neighborhood.positions(function(i, node) {
+		
+			// Parent nodes - plot them
+				// keeps the parent node position the same. BUT causes 'hole' in rank where it would otherwise appear
+				// just another reason that parent node needs removed from neighborhood
+			if ( node.data('id') === nodeParentId ) {  
+				// If parent node has NOT been plotted, plot it above selectedNode
+				if ( node.position('x') === 0 && node.position('y') === 0 ) { 
+					return {
+						x: posX,
+						y: posY - 100
+					};
+				}
+				// If parent node HAS been plotted 							   
+				else {
+					// If from the Search Bar, move parent node to position above selected node
+					if ( fromSearch == true) {
+						return {
+							x: posX,
+							y: posY - 100
+						};
+					
+					// If NOT from the Search Bar, keep x-y coors the same 
+					} else {
+						return {
+							x: node.position('x'),
+							y: node.position('y')
+						};
+					}
+				}
+			// Non-parent neighborhood nodes - plot them
+			} else {
+				// If a node is NOT already plotted give it x-y coors
+				if (node.position('x') === 0 && node.position('y') === 0) {
+					return {
+						x: i * xDistance + xStartPoint,
+						y: posY + 100
+					};	
+				}
+				// If a node has already been plotted, return those x-y coors to keep its position the same
+				else {
+					return {
+						x:node.position('x'),
+						y:node.position('y')
+					};
+				}
+			}
+		}); // end neighborhood.positions
+	} // end plotNodeWithNeighbors
 
 
 	var cy = cytoscape({
@@ -134,16 +222,24 @@ $(function() {
 //			padding: 10
 //		}
 	}); //end var cy
-
+	
+	var searchItems = null;
+	var searchIds = []; // for search bar		
+	var searchTerms = []; //for search bar
+	
 	$.getJSON( "https://raw.githubusercontent.com/dolleyj/cytoscape/master/TEST_eco_from_obo.json", function( data ) {	
 //	$.getJSON( "https://raw.githubusercontent.com/dolleyj/cytoscape/master/eco_from_obo.json", function( data ) {
-		var newNodes = [];		
+		var newNodes = []; // for graph
+
 
 		$.each( data, function( key, val ) {
 			var node = [];
 
 			if (/^ECO/.test(key)) {
 				var properties = [];
+					
+				// create searchable list for jQuery search bar
+				searchTerms.push({'category': 'Term Name', 'label': key + " " + val.name[0], 'value': key + " " + val.name[0], 'node': key});
 				
 				// loop through term's properties
 				for ( property in val ) {
@@ -257,8 +353,94 @@ $(function() {
 			}
 		});
 		
+
+
+//		var nodes = newNodes.id;
+////		//var nodeName = cy.nodes.data('name');
+//		console.log('nodes ' + nodes);
+////		//console.log('nodeName ' + nodeName);
+		
 	}).then(function(){
-			$('#loading').hide();
+		$('#loading').hide();
+		
+		// SET ECO TERM SEARCH BAR		
+		$.widget( "custom.catcomplete", $.ui.autocomplete, {
+			_create: function() {
+			  this._super();
+			  this.widget().menu( "option", "items", "> :not(.ui-autocomplete-category)" );
+			},
+			_renderMenu: function( ul, items ) {
+			  var that = this,
+				currentCategory = "";
+			  $.each( items, function( index, item ) {
+				var li;
+				if ( item.category != currentCategory ) {
+				  ul.append( "<li class='ui-autocomplete-category'><b><u>" + item.category + "</u></b></li>" );
+				  currentCategory = item.category;
+				}
+				li = that._renderItemData( ul, item );
+				if ( item.category ) {
+				  li.attr( "aria-label", item.category + " : " + item.label );
+				}
+			  });
+			  ul.css({'z-index': 99999}); //brings the search suggestions 'to the top', above the graph
+			}
+		});	
+			
+		// change input outline color to match site's theme
+		$('input, textarea').focus(function() {
+			$(this).css('outline-color', '#B1DDAB');	
+		});
+
+		$("#eco-search").catcomplete({
+			source: searchTerms,			
+			minLength: 2,
+
+			// select drop-down item. Then press 'Enter' to go display Node, its information, and neighborhood
+			select:function(e,ui) {
+				$('#eco-search').keypress(function(e){
+					if (e.which ==13) {
+
+						console.log(ui.item.node);
+						var selectedNodeId = ui.item.node;
+						var selectedNode = cy.getElementById(selectedNodeId);
+						var selectedNeighborhood = selectedNode.neighborhood();
+						
+						// hide ALL node and edges
+						cy.elements().removeClass('faded active selected').addClass('hidden');
+						
+						// Plot selected node and its neighborhood
+						var fromSearch = true;
+						plotNodeWithNeighbors(selectedNode, fromSearch);
+						
+
+						//cy.edges().removeClass('faded active').addClass('hidden');
+						selectedNode.removeClass('hidden').addClass('selected');
+						selectedNeighborhood.removeClass('hidden').addClass('active'); 						
+						
+						displayNodeDetails(selectedNode);
+						
+						// redraw (realign mouse coords with graph coords)
+						cy.resize(); 
+		
+						// recenter the graph based on new active nodes
+						cy.animate({
+							fit: {
+								eles: selectedNeighborhood,
+								padding: 40
+								}
+							}, {
+							duration: 1000
+						});
+
+						
+						selectedNodeId = null; // Reset selectedNodeId so user can search for a new term
+					}
+				});
+			}
+
+		});	
+			
 			
 	}); // end .getJSON
 	
@@ -275,68 +457,17 @@ $(function() {
 		} else {console.log("Nope");}
 	});
 
-	var xDistance = 75; // space between nodes (x-coors)
+//	var xDistance = 75; // space between nodes (x-coors)
 
 	// Displays selected node's children
 	cy.on('tap', 'node', function(e){
 		var node = e.cyTarget;
-		var posY = node.position('y'); //get y-coord of selected node
-		var posX = node.position('x'); //get x-coord of selected node
-		
-		// Get parent node OUT of neighbor so it doesnt remap
-		var nodeParent = node.outgoers().target(); //gets the edges and targets coming out from node
 		var neighborhood = node.neighborhood(); // includes parent! need to get children
 		
-		var parentCount = 0;
-		
-		// root nodes error without this:
-		if (nodeParent) {
-			//console.log('nodeParent = ', nodeParent.data('id'));
-			var nodeParentId = nodeParent.data('id');
-			parentCount = nodeParent.length;
-			
-			nodeParent.removeClass('faded').addClass('active');
-//			neighborhood.filter(function(i, node) {
-//				if ( node.data('id') === nodeParent.data('id') || node.data('target') === nodeParent.data('id')) {
-//					console.log('node.data(id) = ', node.data('id'));
-//					//return node.data('id') != nodeParent.data('id');
-//					return node;
-//				} else {
-//					return node;
-//				}
-//			});			
-			
-		}// else {return true;}
-		
-		
-		var childCount = neighborhood.filter('node').length - parentCount; // number of child nodes
-		console.log(childCount / 2);
-		
-		var xStartPoint = posX - (xDistance * childCount); //from the selected node x-coord, start at half of the total distance between all child nodes 
-		
-		neighborhood.positions(function(i, node) {
-			if ( node.data('id') === nodeParentId ) {  // keeps the parent node position the same. BUT causes 'hole' in rank where it would otherwise appear
-				return {							   // just another reason that parent node needs removed from neighborhood
-					x: node.position('x'),
-					y: node.position('y')
-				};
-			} else {
-				// If a node is NOT already plotted give it x-y coors
-				if (node.position('x') === 0 && node.position('y') === 0) {
-					return {
-						x: i * xDistance + xStartPoint,
-						y: posY + 100
-					};	
-				}
-				else {
-					// If a node has already been plotted, return those x-y coors to keep its position the same
-					return {
-						x:node.position('x'),
-						y:node.position('y')
-					};
-				}
-			}
-		});
+		// plot node and its neighbors
+		var fromSearch = false;
+		plotNodeWithNeighbors(node, fromSearch);
+
 		
 		// apply styles...
 		cy.elements().addClass('faded').removeClass('active selected'); //all nodes
@@ -355,7 +486,7 @@ $(function() {
 		cy.animate({
 			fit: {
 				eles: neighborhood,
-				padding: 80
+				padding: 40
 				}
 			}, {
 			duration: 1000
@@ -395,7 +526,7 @@ $(function() {
 		cy.animate({
 			fit: {
 				eles: nodesActive,
-				padding: 80
+				padding: 40
 				}
 			}, {
 			duration: 1000
@@ -425,7 +556,7 @@ $(function() {
 		cy.animate({
 			fit: {
 				eles: nodes,
-				padding: 80
+				padding: 40
 				}
 			}, {
 			duration: 1000
@@ -435,75 +566,7 @@ $(function() {
 	$('#button-print').click(function() {
 		var png = cy.png();
 		$('#button-print').attr('href', png).attr('download', 'ecoGraph.png');
-	});
-	
-	
-	// START ECO TERM SEARCH BAR
-	// TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
-	//
-	// 1) Set node IDs and NAMES as souce for .catcomplete search bar
-	// 2) The selected ID or NAME should cy.resize() the graph to design:
-	//		a) the SELECTED node 
-	//		b) the neighborhood of the selected node
-	//
-	//
-	// TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
-	$.widget( "custom.catcomplete", $.ui.autocomplete, {
-		_create: function() {
-		  this._super();
-		  this.widget().menu( "option", "items", "> :not(.ui-autocomplete-category)" );
-		},
-		_renderMenu: function( ul, items ) {
-		  var that = this,
-			currentCategory = "";
-		  $.each( items, function( index, item ) {
-			var li;
-			if ( item.category != currentCategory ) {
-			  ul.append( "<li class='ui-autocomplete-category'><b><u>" + item.category + "</u></b></li>" );
-			  currentCategory = item.category;
-			}
-			li = that._renderItemData( ul, item );
-			if ( item.category ) {
-			  li.attr( "aria-label", item.category + " : " + item.label );
-			}
-		  });
-		}
-	});
+	});	
 
-	// Nav Search Bar JQuery script
-	$(function() {
-
-		// change input outline color to match site's theme
-		$('input, textarea').focus(function() {
-			$(this).css('outline-color', '#B1DDAB');
-		});
-
-		//console.log(newNodes);
-
-		$("#eco-search").catcomplete({
-//			source: newNodes,
-			minLength: 1,
-	
-			// select drop-down item. Then press 'Enter' to go to link
-			select:function(e,ui) {
-				$('#eco-search').keypress(function(e){
-					if (e.which ==13) {
-
-						//http://stackoverflow.com/questions/4597050/how-to-check-if-the-url-contains-a-given-string
-						if(window.location.href.indexOf("post/") > -1) {
-							window.location.href = '../../' + ui.item.the_link;
-						}
-						else if (window.location.href.indexOf("publications/") > -1) {
-							window.location.href = '../../' + ui.item.the_link;
-						}
-						else {
-							window.location.href = '../' + ui.item.the_link;
-						}
-					}
-				});
-			}
-
-		});
-	}); //end FUNCTION search bar JQuery script
 
 }); // end script
