@@ -77,6 +77,16 @@ $(function() {
 			
 		}// else {return true;}
 		
+		// TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
+		//
+		//  PROBLEM:  childCount > ?? number cause the viewport to zoom out REALLY far...TOO too far
+		//
+		//		IDEA to fix:  ~ 15-17 nodes across is good for viewing (HARDCODED, not dynamic though)
+		//					 Every 15-17 nodes should start a NEW ROW and STAGGER between prior row
+		//	The 'Cheese-Wine' demo might help: http://jsbin.com/gist/cde4db55e581d10405f5?output
+		//
+		//
+		// TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 		
 		var childCount = neighborhood.filter('node').length - parentCount; // number of child nodes
 		console.log(childCount / 2);
@@ -223,9 +233,8 @@ $(function() {
 //		}
 	}); //end var cy
 	
-	var searchItems = null;
-	var searchIds = []; // for search bar		
-	var searchTerms = []; //for search bar
+		
+	var searchTerms = []; //for search bar, will hold searchable eco ids and names
 	
 	$.getJSON( "https://raw.githubusercontent.com/dolleyj/cytoscape/master/TEST_eco_from_obo.json", function( data ) {	
 //	$.getJSON( "https://raw.githubusercontent.com/dolleyj/cytoscape/master/eco_from_obo.json", function( data ) {
@@ -413,11 +422,11 @@ $(function() {
 						var fromSearch = true;
 						plotNodeWithNeighbors(selectedNode, fromSearch);
 						
-
-						//cy.edges().removeClass('faded active').addClass('hidden');
+						// apply css styles to visualize node and neighborhood
 						selectedNode.removeClass('hidden').addClass('selected');
 						selectedNeighborhood.removeClass('hidden').addClass('active'); 						
 						
+						// display node's info
 						displayNodeDetails(selectedNode);
 						
 						// redraw (realign mouse coords with graph coords)
@@ -437,9 +446,9 @@ $(function() {
 						selectedNodeId = null; // Reset selectedNodeId so user can search for a new term
 					}
 				});
-			}
+			} // end select:function
 
-		});	
+		}); // end catcomplete	
 			
 			
 	}); // end .getJSON
