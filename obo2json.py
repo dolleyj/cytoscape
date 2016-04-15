@@ -35,8 +35,8 @@ def add_object(d):
 	
 	# This removes 'id' because its going to be set as object's key
 	# and keeping it would make 'id' appear twice 
-	if "id" in d:
-		del d["id"]
+	#if "id" in d:		# REMOVED THESE 2 LINES TO MAKE JQUERY TERM SEARCH EASIER TO PARSE
+	#	del d["id"]
 		
 	if "is_a" not in d:
 		d["is_a"] = []
